@@ -37,7 +37,7 @@ class EmailSender
   # Minor version number
   VERSION_MINOR = 0
   # Tiny version number
-  VERSION_TINY  = 0
+  VERSION_TINY  = 2
   # Version number
   VERSION_CODE  = (VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | VERSION_TINY
   # Version string
