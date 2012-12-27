@@ -1,11 +1,12 @@
 = EmailSender Library
 
-EmailSender is an easy to use library to send email through SMTP server based on Net::SMTP library.
+EmailSender is an easy to use library to send email based on Net::SMTP.
+It supports the well-known encryption and authentication methods, and you can use it very easily with Gmail account.
 
   require 'email_sender'
 
   mailer = EmailSender.new(server: "smtp.mail.com", from: "sender@mail.com")
-  mailer.send(to: "receiver@mail.com", subject: "Test mail!", content: "This is a test mail!")
+  mailer.send(to: "receiver@mail.com", subject: "Test mail", content: "This is a test mail.")
 
 == Usage
 
@@ -15,7 +16,7 @@ You need specified the connection parameters to SMTP server on initialization:
   mailer = EmailSender.new(server: "smtp.mail.com", from: "Sender Name <sender@mail.com>")
 
   # encripted and authenticated connection
-  mailer = EmailSender.new(server: "smtp.mail.com", port: 465, from: "Sender Name <sender@mail.com>",
+  mailer = EmailSender.new(server: "smtp.mail.com", from: "Sender Name <sender@mail.com>",
                            enctype: :ssl_tls, authtype: :plain, username: "user.name", password: "secret")
 
 Easier way to using Gmail account:
@@ -27,7 +28,7 @@ Easier way to using Gmail account:
   # with full sender name
   mailer = EmailSender.new_gmail(from: "Sender Name <user.name@gmail.com>", password: "secret")
 
-  # with another sender email address and another domain (non gmail.com) account
+  # with another sender email address and another domain (not gmail.com) account
   mailer = EmailSender.new_gmail(from: "Sender Name <sender@othermail.com>",
                                  username: "user.name@company.com", password: "secret")
 
@@ -43,8 +44,8 @@ You can modify easily the parameters of mailer object:
 
 Send the mail to the +:to+, +:cc+ and +:bcc+ addresses with attachment:
 
-  mailer.send(to: "Receiver Name <receiver@mail.com>", subject: "Test mail!",
-              content: "This is a test mail!", attachment: "/path/to/file")
+  mailer.send(to: "Receiver Name <receiver@mail.com>", subject: "Test mail",
+              content: "This is a test mail.", attachment: "/path/to/file")
 
 The +:to+, +:cc+ and +:bcc+ keys accept an email address array so you can send the message to many receivers.
 And the +:attachment+ key accepts also file path array so you can attach more file:
@@ -52,7 +53,7 @@ And the +:attachment+ key accepts also file path array so you can attach more fi
   mailer.send(to: ["Receiver Name 1 <receiver1@mail.com>", "Receiver Name 2 <receiver2@mail.com>"],
               cc: ["Receiver Name 3 <receiver3@mail.com>", "Receiver Name 4 <receiver4@mail.com>"],
               bcc: [receiver5@mail.com, "receiver6@mail.com", "receiver7@mail.com"],
-              subject: "Test mail!", content: "This is a test mail!",
+              subject: "Test mail", content: "This is a test mail.",
               attachment: ["/path/to/file1", "/path/to/file2", "/path/to/file3"])
 
 If there are not specified the +:to+, +:cc+ and +:bcc+ addresses on sending use the initialized default addresses:
@@ -63,7 +64,7 @@ If there are not specified the +:to+, +:cc+ and +:bcc+ addresses on sending use 
                            cc: ["Receiver Name 2 <receiver2@mail.com>", "Receiver Name 3 <receiver3@mail.com>"])
 
   # send email to the default addresses
-  mailer.send(subject: "Test mail!", content: "This is a test mail!")
+  mailer.send(subject: "Test mail", content: "This is a test mail.")
 
 You can specify the content type which is +'text/plain'+ by default:
 
@@ -71,15 +72,15 @@ You can specify the content type which is +'text/plain'+ by default:
               content: "<img src='http://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg'/>",
               conttype: "text/html")
 
-The library has implemented threadsafe and support the character encoded strings of Ruby.
+The library has implemented threadsafe and support the character encoded messages.
 
 == Installation
 
-  sudo gem install email_sender
+  gem install email_sender
 
 == Requirements
 
-ruby1.9.1
+ruby1.9.1 or greater
 
 == License
 

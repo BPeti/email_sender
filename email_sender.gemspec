@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'email_sender'
-  s.version = '1.0.2'
-  s.date = '2012-09-19'
+  s.version = '1.1.0'
+  s.date = '2012-12-27'
   s.platform = 'ruby'
   s.required_ruby_version = '>= 1.9.1'
   s.required_rubygems_version = '>= 0'
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.has_rdoc = true
   s.extra_rdoc_files = ['README.rdoc']
   s.files = ['LICENSE', 'VERSION', 'README.rdoc', 'lib/email_sender.rb']
-  s.summary = 'Easy to use library to send email through any SMTP server.'
-  s.description = 'EmailSender is a easy to use library to send email through SMTP server based on Net::SMTP library.'
+  s.summary = "EmailSender is an easy to use library to send email."
+  s.description = "EmailSender is an easy to use library to send email based on Net::SMTP.\nIt supports the well-known encryption and authentication methods, and you can use it very easily with GMail account."
   s.license = 'LGPL-3'
 end
