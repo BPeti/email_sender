@@ -10,9 +10,9 @@ It supports the well-known encryption and authentication methods, and you can us
 
 == Usage
 
-You need specified the connection parameters to SMTP server on initialization:
+You can specify the connection parameters to SMTP server at initialization:
 
-  # simple unsafe connection
+  # simple connection
   mailer = EmailSender.new(server: "smtp.mail.com", from: "Sender Name <sender@mail.com>")
 
   # encripted and authenticated connection

@@ -33,7 +33,7 @@ class EmailSender
   # Major version number
   VERSION_MAJOR = 1
   # Minor version number
-  VERSION_MINOR = 1
+  VERSION_MINOR = 2
   # Tiny version number
   VERSION_TINY  = 0
   # Version number
@@ -44,7 +44,7 @@ class EmailSender
   ATTACHMENT_READ_CACHE = 116736 # multiple to 57 #:nodoc:
 
   Settings = Struct.new(:server, :port, :domain, :esmtp, :enctype, :authtype,
-    :username, :password, :from_addr, :to_addrs, :cc_addrs, :bcc_addrs) #:nodoc:
+    :username, :password, :from_addr, :reply_addr, :to_addrs, :cc_addrs, :bcc_addrs) #:nodoc:
 
   # Create a new object and initialize connection parameters.
   #   +-----------------------------------------------------------------------------------+
@@ -61,6 +61,7 @@ class EmailSender
   #   |:username   |<string>                                   |nil                       |
   #   |:password   |<string>                                   |nil                       |
   #   |:from       |<string>                                   |                          |
+  #   |:reply      |<string>                                   |nil                       |
   #   |:to         |<string>, <array of string>                |[]                        |
   #   |:cc         |<string>, <array of string>                |[]                        |
   #   |:bcc        |<string>, <array of string>                |[]                        |
@@ -74,10 +75,11 @@ class EmailSender
   # Update the connection parameters.
   # See the ::new() method for initialization parameters.
   def renew(params={})
-    server, from = params[:server], params[:from]
+    server, from, reply = params[:server], params[:from], params[:reply]
     if server and from
       settings = Settings.new
       settings.from_addr = parse_addr(from)
+      settings.reply_addr = parse_addr(reply) if reply
       settings.to_addrs = parse_addrs(*params[:to])
       settings.cc_addrs = parse_addrs(*params[:cc])
       settings.bcc_addrs = parse_addrs(*params[:bcc])
@@ -111,6 +113,7 @@ class EmailSender
   #   |:username   |<string>                                   |-> from address           |
   #   |:password   |<string>                                   |                          |
   #   |:from       |<string>                                   |-> username parameter     |
+  #   |:reply      |<string>                                   |nil                       |
   #   |:to         |<string>, <array of string>                |[]                        |
   #   |:cc         |<string>, <array of string>                |[]                        |
   #   |:bcc        |<string>, <array of string>                |[]                        |
@@ -215,21 +218,26 @@ class EmailSender
             boundary = "boundary0_#{random_id}"
             stream.puts("Message-ID: <#{message_id}>")
             stream.puts(now.strftime('Date: %a, %d %b %Y %H:%M:%S %z'))
-            stream.puts("From: " << (from_name ? (from_name.ascii_only? ? "#{from_name} <#{from_addr}>" :
-              "=?utf-8?B?#{[from_name].pack('m0')}?= <#{from_addr}>") : from_addr))
+            stream.puts("From: #{from_name ? \
+              "=?#{check_charset(from_name)}?B?#{[from_name].pack('m0')}?= <#{from_addr}>" : from_addr}")
+            if settings.reply_addr
+              reply_addr, reply_name = settings.reply_addr
+              stream.puts("Reply-To: #{reply_name ? \
+                "=?#{check_charset(reply_name)}?B?#{[reply_name].pack('m0')}?= <#{reply_addr}>" : reply_addr}")
+            end
             to_str = ''
             to_addrs.each do |addr, name|
-              to = name ? "#{name.ascii_only? ? name : "=?utf-8?B?#{[name].pack('m0')}?="} <#{addr}>" : addr
+              to = name ? "=?#{check_charset(name)}?B?#{[name].pack('m0')}?= <#{addr}>" : addr
               to_str << (to_str.empty? ? "To: #{to}" : ",\n\t#{to}")
             end
             stream.puts(to_str) unless to_str.empty?
             cc_str = ''
             cc_addrs.each do |addr, name|
-              cc = name ? "#{name.ascii_only? ? name : "=?utf-8?B?#{[name].pack('m0')}?="} <#{addr}>" : addr
+              cc = name ? "=?#{check_charset(name)}?B?#{[name].pack('m0')}?= <#{addr}>" : addr
               cc_str << (cc_str.empty? ? "CC: #{cc}" : ",\n\t#{cc}")
             end
             stream.puts(cc_str) unless cc_str.empty?
-            stream.puts("Subject: " << (subject.ascii_only? ? subject : "=?utf-8?B?#{[subject].pack('m0')}?="))
+            stream.puts("Subject: =?#{check_charset(subject)}?B?#{[subject].pack('m0')}?=")
             stream.puts("MIME-Version: 1.0")
             unless attachment.empty?
               stream.puts("Content-Type: multipart/mixed; boundary=\"#{boundary}\"")
@@ -237,7 +245,7 @@ class EmailSender
               stream.puts("This is a multi-part message in MIME format.")
               stream.puts("--#{boundary}")
             end
-            stream.puts("Content-Type: #{conttype}; charset=#{content.ascii_only? ? 'us-ascii' : 'utf-8'}")
+            stream.puts("Content-Type: #{conttype}; charset=#{check_charset(content)}")
             stream.puts("Content-Transfer-Encoding: base64")
             stream.puts
             stream.print([content].pack('m57'))
@@ -245,7 +253,7 @@ class EmailSender
               attachment.each do |file|
                 file = file.encode(Encoding::UTF_8)
                 basename = File.basename(file)
-                filename = basename.ascii_only? ? basename : "=?utf-8?B?#{[basename].pack('m0')}?="
+                filename = "=?#{check_charset(basename)}?B?#{[basename].pack('m0')}?="
                 stream.puts("--#{boundary}")
                 stream.puts("Content-Type: application/octet-stream; name=\"#{filename}\"")
                 stream.puts("Content-Transfer-Encoding: base64")
@@ -263,12 +271,17 @@ class EmailSender
   end
 
 private
+  def check_charset(str)
+    str.ascii_only? ? 'us-ascii' : 'utf-8'
+  end
+
   def parse_addr(str)
     str = str.encode(Encoding::UTF_8)
     str.strip!
     addr = str.scan(/\A(.*?)\s*<([^<]*?)>\z/).first
     addr ? addr.reverse! : [str, nil]
   end
+
   def parse_addrs(*strs)
     addrs = {}
     strs.each do |str|
